@@ -1,0 +1,10 @@
+{
+  "last_dir": "C:/Users/13105/Desktop/test/mp3",
+  "backend": "llm",
+  "model": "deepseek-flash",
+  "style": "意象化 poetic",
+  "explicit": "只中和贬称 soften",
+  "target_lang": "简体中文",
+  "inplace": false,
+  "last_out": "C:/Users/13105/Desktop/test/新建文件夹"
+}

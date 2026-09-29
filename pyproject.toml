@@ -1,0 +1,45 @@
+[project]
+name = "lyric-tag-translator"
+version = "0.1.0"
+description = "歌词嵌译：批量把歌词翻译成中文并写回音频的内嵌歌词字段（©lyr），面向 iPod 这类没有渲染层的设备"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["lyrics", "translation", "m4a", "mp4", "itunes", "ipod", "©lyr", "lrc"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Text Processing :: Linguistic",
+]
+dependencies = [
+    "mutagen>=1.47",
+]
+
+[project.optional-dependencies]
+# 图形界面只用标准库的 tkinter，不需要额外依赖；
+# 这个 extra 只是留个位置，方便以后换 GUI 框架。
+gui = []
+
+[project.scripts]
+lyric-tag-translator = "lyric_tag_translator.cli:main"
+lyric-tag-translator-gui = "lyric_tag_translator.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/qiu0022/lyric-tag-translator"
+Issues = "https://github.com/qiu0022/lyric-tag-translator/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lyric_tag_translator"]

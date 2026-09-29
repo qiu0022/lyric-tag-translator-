@@ -1,0 +1,13 @@
+# 仓库里一律存 LF；Windows 上需要 CRLF 的少数类型单独指定。
+# 不设这个的话，Windows 的 core.autocrlf=true 会让 clone 下来的 .py 全变 CRLF，
+# 产生一堆假 diff。
+* text=auto eol=lf
+
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.zip  binary
