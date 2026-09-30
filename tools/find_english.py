@@ -10,9 +10,9 @@ import re
 import sys
 from pathlib import Path
 
-from lyric_i18n import clean
-from lyric_i18n.identity import read_tags
-from lyric_i18n.lyrics import iter_audio, read_lyrics
+from lyric_tag_translator import clean
+from lyric_tag_translator.identity import read_tags
+from lyric_tag_translator.lyrics import iter_audio, read_lyrics
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 

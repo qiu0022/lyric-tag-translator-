@@ -19,7 +19,7 @@ r"""SQLite 缓存：断点续跑、不重复烧钱、可审计、可淘汰。
 
 4. **备份不放这里。**
    缓存是可以随手删的东西，备份不是。备份在 `lyrics.py` 管理的
-   `.lyric_i18n_backup/` 里，独立于数据库。
+   `.lyric_tag_translator_backup/` 里，独立于数据库。
 """
 
 from __future__ import annotations
@@ -29,7 +29,20 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
-DEFAULT_DB = "lyric_i18n.db"
+DEFAULT_DB = "lyric_tag_translator.db"
+# 旧名。改名之前建的缓存库还叫这个，里面是**花过钱翻好的译文**，
+# 认不出来就等于白翻一遍。所以没显式指定路径时，先看旧文件在不在。
+LEGACY_DB = "lyric_i18n.db"
+
+
+def default_db_path() -> Path:
+    """没指定 `--db` 时用哪个库。
+
+    旧文件存在就继续用它——不迁移、不复制。原因和备份目录一样：
+    动用户磁盘上的既有数据，收益只是名字好看，代价是可能把东西弄丢。
+    """
+    legacy = Path(LEGACY_DB)
+    return legacy if legacy.exists() else Path(DEFAULT_DB)
 
 # 建表和建索引**必须分开**，而且索引要等迁移之后再建。
 # 否则在早先版本的库上会崩：表已存在 → CREATE TABLE IF NOT EXISTS 不做事 →
@@ -62,8 +75,11 @@ def _now() -> str:
 
 
 class Cache:
-    def __init__(self, path: str | Path = DEFAULT_DB):
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None):
+        # 默认值不用 `DEFAULT_DB` 常量而走 `default_db_path()`：
+        # 后者会先看旧名字的文件在不在。写成默认参数会在 import 时求值一次，
+        # 那时候 cwd 还不一定是用户真正的工作目录。
+        self.path = Path(path) if path else default_db_path()
         self.conn = sqlite3.connect(str(self.path))
         self.conn.executescript(_TABLES)
         self._migrate()              # 先补列

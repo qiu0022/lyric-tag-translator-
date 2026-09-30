@@ -8,7 +8,7 @@ import io
 import os
 import sys
 
-from lyric_i18n.translate import TranslateOptions, Translator
+from lyric_tag_translator.translate import TranslateOptions, Translator
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 

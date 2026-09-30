@@ -24,7 +24,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from . import clean
-from .cache import Cache
+from .cache import Cache, default_db_path
 from .identity import read_tags
 from .lyrics import (
     backup_dir_for,
@@ -111,7 +111,7 @@ class Row:
 class App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("lyric-i18n · 歌词批量汉化")
+        self.title("歌词嵌译 · lyric-tag-translator")
         self.geometry("1180x760")
         self.minsize(940, 600)
 
@@ -518,7 +518,7 @@ class App(tk.Tk):
 
         ok = failed = 0
         calls = tin = tout = 0
-        db = Path("lyric_i18n.db")
+        db = default_db_path()
 
         with Cache(db) as cache:
             if backend != "echo":
@@ -714,7 +714,7 @@ class App(tk.Tk):
         早先调的是 prune，缓存全是当前版本时一条都删不掉，
         用户以为工具"记住了翻过什么"，清不掉。
         """
-        db = Path("lyric_i18n.db")
+        db = default_db_path()
         if not db.exists():
             messagebox.showinfo("没有缓存", f"找不到 {db.resolve()}\n（说明还没跑过翻译）")
             return

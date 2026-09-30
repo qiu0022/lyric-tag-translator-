@@ -1,16 +1,23 @@
-# lyric-i18n
+# 歌词嵌译 · lyric-tag-translator
 
 批量把歌词翻译成中文，写回音频文件的**内嵌歌词字段**（`©lyr`），
 面向 iPod 这类**只能显示静态纯文本、没有任何渲染层**的设备。
 
+> **嵌**——译文写进文件里的 `©lyr` 标签，不是一个外挂文件；
+> **译**——干的是翻译，不是从网上抓现成歌词。
+
+`lyric-tag-translator` 三个词分别在说：处理的是**歌词**，
+结果落在**标签**里，动作是**翻译**。这样在 GitHub / PyPI 上搜
+`m4a lyric translate tag` 任意一个词都能命中。
+
 ```powershell
 # 图形界面（推荐）
-lyric-i18n-gui
+lyric-tag-translator-gui
 
 # 命令行
-lyric-i18n scan  "D:\Music"           # 先看会发生什么（只读）
-lyric-i18n run   "D:\Music" --dry-run # 试运行
-lyric-i18n run   "D:\Music" --out "D:\Music_已翻译"   # 写到另一个目录，源文件不动
+lyric-tag-translator scan  "D:\Music"           # 先看会发生什么（只读）
+lyric-tag-translator run   "D:\Music" --dry-run # 试运行
+lyric-tag-translator run   "D:\Music" --out "D:\Music_已翻译"   # 写到另一个目录，源文件不动
 ```
 
 ---
@@ -39,7 +46,7 @@ pip install .
 
 ```bash
 pip install mutagen
-python -m lyric_i18n.gui
+python -m lyric_tag_translator.gui
 ```
 
 翻译需要一个大模型的 API Key（默认 DeepSeek，很便宜）：
@@ -187,7 +194,7 @@ $env:DEEPSEEK_API_KEY = "sk-..."
 
 ## 安全
 
-**写盘前一定先备份**，存在音乐目录下的 `.lyric_i18n_backup/`，
+**写盘前一定先备份**，存在音乐目录下的 `.lyric_tag_translator_backup/`，
 按歌曲身份命名，**首次为准**（反复翻译不会覆盖掉最初那份）。
 
 写盘是**原子**的：先复制到临时文件、改临时文件、再整体替换。
@@ -197,19 +204,30 @@ $env:DEEPSEEK_API_KEY = "sk-..."
 备份的意义（写坏了能回退）在这里不存在。
 
 ```bash
-lyric-i18n restore "D:\Music"          # 先看有多少份
-lyric-i18n restore "D:\Music" --yes    # 确认执行
+lyric-tag-translator restore "D:\Music"          # 先看有多少份
+lyric-tag-translator restore "D:\Music" --yes    # 确认执行
 ```
 
 > iTunes / Apple Music 开着的时候可能锁住文件，写盘会明确报错而不是静默跳过。
 > 改完需要在 iTunes 里重新导入才会生效。
+
+### 改过名，老库怎么办
+
+这个工具一度叫 `lyric-i18n`，改名时留了兼容：
+
+- **备份目录**：库里如果已经有 `.lyric_i18n_backup/`，**继续用它**，不迁移也不新建。
+- **缓存库**：工作目录下如果已经有 `lyric_i18n.db`，**继续用它**。
+
+刻意不自动重命名。这两样东西都在用户自己的磁盘上，一个是原始歌词的唯一副本，
+一个是花钱翻出来的译文——为了名字统一去动它们，收益只是好看，代价是可能弄丢。
+新库直接走新名字，老库维持原样。
 
 ---
 
 ## 常见问题
 
 **缓存清不掉？**
-「清空缓存」清的是**已翻译的译文**（`lyric_i18n.db`）；
+「清空缓存」清的是**已翻译的译文**（`lyric_tag_translator.db`）；
 「清除处理记录」清的是**备份目录**。两者不同，界面上都写明了后果。
 
 **为什么有些歌被跳过了？**
@@ -267,7 +285,7 @@ python tools/selftest_english.py    # 需要 DEEPSEEK_API_KEY，验证英文行�
 
 ### 改提示词要注意的事
 
-提示词在 `lyric_i18n/translate.py`，改动后**必须提升 `PROMPT_VERSION`**，
+提示词在 `lyric_tag_translator/translate.py`，改动后**必须提升 `PROMPT_VERSION`**，
 否则缓存会返回旧产物。
 
 另外，写规则时**两侧的例子要对称**——这是踩过三次的坑：

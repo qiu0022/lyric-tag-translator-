@@ -8,10 +8,13 @@
 *.lrc
 
 # ---- 运行期产生的数据 ----
+# 新旧名字都列上：老库继续用旧名（见 lyrics.backup_dir_for / cache.default_db_path）
+lyric_tag_translator.db
 lyric_i18n.db
 *.db
 gui_config.json
 launch.log
+.lyric_tag_translator_backup/
 .lyric_i18n_backup/
 *_已翻译/
 

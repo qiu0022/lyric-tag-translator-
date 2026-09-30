@@ -11,7 +11,7 @@ import _bootstrap  # noqa: F401  （把项目根加进 sys.path，见 _bootstrap
 import io
 import sys
 
-from lyric_i18n.clean import (
+from lyric_tag_translator.clean import (
     KIND_VOCAL,
     looks_translated,
     parse_tag_text,

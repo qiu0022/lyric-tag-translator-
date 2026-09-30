@@ -13,7 +13,9 @@ from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
-db = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("lyric_i18n.db")
+from lyric_tag_translator.cache import default_db_path
+
+db = Path(sys.argv[1]) if len(sys.argv) > 1 else default_db_path()
 if not db.exists():
     print(f"找不到 {db}")
     raise SystemExit(1)

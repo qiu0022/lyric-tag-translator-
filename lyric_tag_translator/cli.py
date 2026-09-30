@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import clean
-from .cache import Cache
+from .cache import Cache, default_db_path
 from .identity import read_tags
 from .lyrics import (
     backup_dir_for,
@@ -586,7 +586,7 @@ def cmd_prune(args: argparse.Namespace) -> int:
         print("清理后：")
         _print_stats(cache.stats())
 
-    print("\n注意：歌词备份不在这里，不会被清理（.lyric_i18n_backup/）")
+    print("\n注意：歌词备份不在这里，不会被清理（.lyric_tag_translator_backup/）")
     return 0
 
 
@@ -595,7 +595,7 @@ def cmd_prune(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
-        prog="lyric-i18n",
+        prog="lyric-tag-translator",
         description="批量把歌词翻译并写回 m4a 的内嵌歌词字段（供 iPod 这类纯文本显示设备使用）",
     )
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -632,7 +632,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--explicit", choices=list(EXPLICITS), default="soften")
     p_run.add_argument("--thinking", action="store_true", help="开启思考模式（更慢更贵）")
     p_run.add_argument("--retries", type=int, default=3)
-    p_run.add_argument("--db", default="lyric_i18n.db", help="缓存数据库路径")
+    p_run.add_argument("--db", default=str(default_db_path()), help="缓存数据库路径")
     p_run.set_defaults(func=cmd_run)
 
     p_check = sub.add_parser("check", help="核对已写回的双语歌词（只读）")
@@ -652,7 +652,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_prune = sub.add_parser(
         "prune", help="缓存维护：默认只清旧版本产物；--purge 全清")
-    p_prune.add_argument("--db", default="lyric_i18n.db")
+    p_prune.add_argument("--db", default=str(default_db_path()))
     p_prune.add_argument("--keep-days", type=int, default=30,
                          help="日志保留天数，默认 30")
     p_prune.add_argument("--purge", action="store_true",

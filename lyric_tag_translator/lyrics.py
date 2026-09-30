@@ -31,7 +31,12 @@ from pathlib import Path
 
 from .identity import ATOM_LYRICS, AUDIO_EXT
 
-BACKUP_DIRNAME = ".lyric_i18n_backup"
+BACKUP_DIRNAME = ".lyric_tag_translator_backup"
+# 旧名。这工具一度叫 lyric-i18n，改名之前建立的备份目录还挂在这个名字上，
+# **必须继续认它**。备份里是原始歌词，既是"翻坏了退回去"的唯一凭据，
+# 也是判断"这首歌是不是已经动过"的依据。不认它有两个后果：
+# 一是还原不了，二是翻好的歌会被当成新歌再翻一遍，译文叠加、把歌词写坏。
+LEGACY_BACKUP_DIRNAME = ".lyric_i18n_backup"
 TMP_SUFFIX = ".lyrici18n.tmp"
 
 
@@ -69,6 +74,15 @@ def line_count(text: str | None) -> int:
 
 
 def backup_dir_for(root: Path) -> Path:
+    """这首歌库的备份目录。
+
+    库里已经有旧名目录就**继续用旧的**，不迁移。刻意不自动重命名：
+    这目录在用户的音乐库里，"改名改出岔子"（备份失联 → 歌词被写坏）
+    的代价，远大于名字不统一这点别扭。新库走新名，老库维持原样。
+    """
+    legacy = root / LEGACY_BACKUP_DIRNAME
+    if legacy.is_dir():
+        return legacy
     return root / BACKUP_DIRNAME
 
 
@@ -212,7 +226,7 @@ if __name__ == "__main__":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
     if len(sys.argv) < 2:
-        print("用法：python -m lyric_i18n.lyrics <目录> [--show N] [--only 关键词]")
+        print("用法：python -m lyric_tag_translator.lyrics <目录> [--show N] [--only 关键词]")
         print("  --show N   打印每首歌前 N 行歌词（看排版用）")
         print("  --only S   只处理名字或 key 含 S 的歌")
         print("（只读，不写任何文件）")

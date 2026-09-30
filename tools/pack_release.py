@@ -14,8 +14,8 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.home() / "Desktop" / "lyric-i18n-0.1.0.zip"
-PREFIX = "lyric-i18n-0.1.0"
+OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.home() / "Desktop" / "lyric-tag-translator-0.1.0.zip"
+PREFIX = "lyric-tag-translator-0.1.0"
 
 files = subprocess.run(
     ["git", "ls-files", "--cached"],

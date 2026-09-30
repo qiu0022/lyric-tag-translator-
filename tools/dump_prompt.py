@@ -11,8 +11,8 @@ import _bootstrap  # noqa: F401  （把项目根加进 sys.path，见 _bootstrap
 import sys
 from pathlib import Path
 
-import lyric_i18n.translate as T
-from lyric_i18n.translate import (
+import lyric_tag_translator.translate as T
+from lyric_tag_translator.translate import (
     DEFAULT_TARGET_LANG,
     EXPLICIT_KEEP,
     EXPLICIT_MASK,
@@ -54,7 +54,7 @@ parts: list[str] = []
 add = parts.append
 
 add("=" * W)
-add(f"lyric-i18n 提示词   版本 v{PROMPT_VERSION}")
+add(f"lyric-tag-translator 提示词   版本 v{PROMPT_VERSION}")
 add("=" * W)
 add("")
 add("=== 默认配置 ===")
