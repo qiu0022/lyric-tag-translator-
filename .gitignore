@@ -1,0 +1,42 @@
+# ---- 音频文件：永远不要提交 ----
+# 这个工具处理的是别人的版权音乐；仓库里只放代码，不放内容。
+*.m4a
+*.m4b
+*.mp4
+*.mp3
+*.flac
+*.lrc
+
+# ---- 运行期产生的数据 ----
+lyric_i18n.db
+*.db
+gui_config.json
+launch.log
+.lyric_i18n_backup/
+*_已翻译/
+
+# ---- 本地测试/临时目录 ----
+_t/
+_test_music/
+*.tmp
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.uv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
