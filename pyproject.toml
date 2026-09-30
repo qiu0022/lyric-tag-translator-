@@ -34,8 +34,8 @@ lyric-tag-translator = "lyric_tag_translator.cli:main"
 lyric-tag-translator-gui = "lyric_tag_translator.gui:main"
 
 [project.urls]
-Homepage = "https://github.com/13105720022at163dotcom/lyric-tag-translator"
-Issues = "https://github.com/13105720022at163dotcom/lyric-tag-translator/issues"
+Homepage = "https://github.com/qiu0022/lyric-tag-translator"
+Issues = "https://github.com/qiu0022/lyric-tag-translator/issues"
 
 [build-system]
 requires = ["hatchling"]
