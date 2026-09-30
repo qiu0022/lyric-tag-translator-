@@ -37,6 +37,7 @@ from .lyrics import (
     write_lyrics,
 )
 from .translate import (
+    DEFAULT_TARGET_LANG,
     EXPLICIT_KEEP,
     EXPLICIT_MASK,
     EXPLICIT_SOFTEN,
@@ -44,14 +45,20 @@ from .translate import (
     STYLE_EUPHEMISTIC,
     STYLE_LITERAL,
     STYLE_POETIC,
+    TARGET_LANGS,
     TranslateOptions,
     Translator,
+    normalize_target_lang,
 )
 
 STYLES = {"意象化 poetic": STYLE_POETIC, "直译 literal": STYLE_LITERAL,
           "含蓄化 euphemistic": STYLE_EUPHEMISTIC}
 EXPLICITS = {"只中和贬称 soften": EXPLICIT_SOFTEN, "照实 keep": EXPLICIT_KEEP,
              "遮蔽 mask": EXPLICIT_MASK}
+# 目标语言。这里**只列中文的两种字形**，不做成自由输入框——
+# 原因见 translate.TARGET_LANGS 的注释：提示词只对中文校准过，
+# 放开输入只会让人翻出一堆没人验证过的东西。
+LANGUAGES = list(TARGET_LANGS)
 
 FONT_UI = ("Microsoft YaHei UI", 9)
 FONT_LYR = ("Microsoft YaHei", 10)
@@ -115,6 +122,8 @@ class App(tk.Tk):
         self.model_var = tk.StringVar(value=cfg.get("model", "deepseek-flash"))
         self.style_var = tk.StringVar(value=cfg.get("style", list(STYLES)[0]))
         self.explicit_var = tk.StringVar(value=cfg.get("explicit", list(EXPLICITS)[0]))
+        self.target_var = tk.StringVar(
+            value=cfg.get("target_lang", DEFAULT_TARGET_LANG))
         self.dry_var = tk.BooleanVar(value=True)
         self.force_var = tk.BooleanVar(value=False)
         # **默认不勾"原地覆盖"**：默认把译文写到另一个目录，源文件不动。
@@ -126,6 +135,12 @@ class App(tk.Tk):
             self.style_var.set(list(STYLES)[0])
         if self.explicit_var.get() not in EXPLICITS:
             self.explicit_var.set(list(EXPLICITS)[0])
+        # 语言多一层：旧配置里可能存的是 "zh-tw" 这类简写，
+        # 也可能存了一个早先支持、现在不支持的写法。归一化不成的一律退回默认。
+        try:
+            self.target_var.set(normalize_target_lang(self.target_var.get()))
+        except ValueError:
+            self.target_var.set(DEFAULT_TARGET_LANG)
 
         self.rows: list[Row] = []
         self.msg_q: queue.Queue[tuple[str, str]] = queue.Queue()
@@ -179,10 +194,16 @@ class App(tk.Tk):
                      width=18, state="readonly", font=FONT_UI).grid(
             row=1, column=4, columnspan=2, padx=(4, 14), pady=(6, 0), sticky="w")
 
+        ttk.Label(opts, text="目标语言", font=FONT_UI).grid(
+            row=2, column=0, sticky="w", pady=(6, 0))
+        ttk.Combobox(opts, textvariable=self.target_var, values=LANGUAGES,
+                     width=14, state="readonly", font=FONT_UI).grid(
+            row=2, column=1, columnspan=2, padx=(4, 14), pady=(6, 0), sticky="w")
+
         ttk.Checkbutton(opts, text="试运行（不写盘）", variable=self.dry_var).grid(
-            row=2, column=0, columnspan=2, sticky="w", pady=(6, 0))
+            row=2, column=3, sticky="w", pady=(6, 0))
         ttk.Checkbutton(opts, text="重做（忽略已有译文/备份）", variable=self.force_var).grid(
-            row=2, column=2, columnspan=3, sticky="w", pady=(6, 0))
+            row=2, column=4, columnspan=2, sticky="w", pady=(6, 0))
 
         # 输出位置：原地覆盖 or 输出到指定目录（源文件一个字节不动）
         ttk.Checkbutton(opts, text="原地覆盖源文件", variable=self.inplace_var,
@@ -314,6 +335,7 @@ class App(tk.Tk):
             model=self.model_var.get().strip(),
             style=self.style_var.get(),
             explicit=self.explicit_var.get(),
+            target_lang=self.target_var.get(),
             inplace=self.inplace_var.get(),
             last_out=self.out_var.get().strip(),
         )
@@ -437,6 +459,7 @@ class App(tk.Tk):
         if not key:
             raise ValueError("没有填 API Key。可以先用「后端 = echo」离线走通流程。")
         opts = TranslateOptions(
+            target_lang=self.target_var.get(),
             style=STYLES[self.style_var.get()],
             explicit=EXPLICITS[self.explicit_var.get()],
             model=self.model_var.get().strip() or "deepseek-flash",
@@ -485,7 +508,8 @@ class App(tk.Tk):
             out_root.mkdir(parents=True, exist_ok=True)
 
         self._say(f"{'试运行' if dry else '正式写入'}：{len(targets)} 首，"
-                  f"后端={backend}，风格={self.style_var.get()}，露骨={self.explicit_var.get()}")
+                  f"后端={backend}，语言={self.target_var.get()}，"
+                  f"风格={self.style_var.get()}，露骨={self.explicit_var.get()}")
         if not dry:
             if out_root is not None:
                 self._say(f"输出目录：{out_root}（源文件不动，不产生备份）")

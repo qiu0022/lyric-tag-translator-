@@ -267,10 +267,72 @@ _EXPLICIT_TEXT = {
     EXPLICIT_MASK: "把确实露骨的具体描写替换为「……」，其余部分正常翻译。",
 }
 
+# ---------------------------------------------------------------- 目标语言
+
+# **只支持中文的两种字形，不做其它语言。**
+#
+# 这不是技术难度问题，是**没有校准样本**：上面那几百行规则——按中文句子构造
+# 重写、中文说唱圈的贬称怎么中性化、中文读者看不看得懂英文钩子——全部是拿
+# 真实成品逐条对出来的（改了 15 版）。把目标换成 English，这些条款立刻自相
+# 矛盾（"翻译成 English 时，中文必须用同等嚣张的自称"），模型会被绕晕，
+# 产出一份没人验证过的东西。**宁可明确不支持，也不要假装支持。**
+#
+# 字形差异不影响下游：`clean.py` 里的行选取和"已翻译"检测都基于汉字判断
+# （`RE_HAN`），简繁一视同仁，所以那两处不需要按目标语言分派。
+TARGET_LANGS: tuple[str, ...] = ("简体中文", "繁體中文")
+DEFAULT_TARGET_LANG = TARGET_LANGS[0]
+_TRADITIONAL = "繁體中文"
+
+# 繁體专用，且**只在目标是繁體时才拼进提示词**——
+# 这样简体那条路径的输出一个字节都不变，已经翻好的缓存不会作废。
+#
+# 为什么必须显式写这一条：提示词里所有示例都是简体写的
+# （`bitch → 「女人／女友」`、`your type → 「理想型」`）。
+# 只说一句"翻译成繁體中文"，模型会**照着示例的字形走**，产出简繁混杂。
+_TRADITIONAL_NOTE = (
+    "═══ 输出字形 ═══\n"
+    "上面和下面所有示例都是简体字写的，那只是为了省事。**你的输出一律用繁體字**，"
+    "不得出现简体字。\n"
+    "用词照台港的通行说法，不要把大陆用语直接搬过去。\n"
+    "原文里的人名／品牌名，如果台港的通行译名和大陆不同，以台港为准。"
+)
+
+# 命令行/配置里打这些写法都能认。归一化在 `TranslateOptions.__post_init__` 里做，
+# 所以**构造时就报错**，不会拖到发请求那一刻才发现语言写错了。
+_LANG_ALIASES: dict[str, str] = {
+    "简体": "简体中文", "简中": "简体中文", "简体字": "简体中文",
+    "zh-cn": "简体中文", "zh_hans": "简体中文", "zh-hans": "简体中文",
+    "simplified": "简体中文", "simplified chinese": "简体中文",
+    "繁体": "繁體中文", "繁中": "繁體中文", "繁体字": "繁體中文",
+    "zh-tw": "繁體中文", "zh-hk": "繁體中文",
+    "zh_hant": "繁體中文", "zh-hant": "繁體中文",
+    "traditional": "繁體中文", "traditional chinese": "繁體中文",
+}
+
+
+def normalize_target_lang(value: str) -> str:
+    """把输入归一化成 `TARGET_LANGS` 里的一项。不认识就报错。
+
+    刻意**不做静默降级**：把「English」悄悄当成「简体中文」翻，
+    用户会拿到一份中文译文却以为是英文，比直接报错糟得多。
+    """
+    raw = (value or "").strip()
+    if raw in TARGET_LANGS:
+        return raw
+    hit = _LANG_ALIASES.get(raw.lower())
+    if hit:
+        return hit
+    raise ValueError(
+        f"不支持的目标语言：{value!r}。目前只支持 {'、'.join(TARGET_LANGS)}"
+        f"（也认 {'、'.join(sorted(set(_LANG_ALIASES))[:6])} 这类简写）。\n"
+        "不做其它语言是刻意的：提示词里那套规则只对中文校准过，"
+        "换个目标语言会产出没验证过的结果。"
+    )
+
 
 @dataclass
 class TranslateOptions:
-    target_lang: str = "简体中文"
+    target_lang: str = DEFAULT_TARGET_LANG
     style: str = STYLE_POETIC
     explicit: str = EXPLICIT_SOFTEN
     model: str = "deepseek-flash"
@@ -280,12 +342,23 @@ class TranslateOptions:
     max_retries: int = 3
     thinking: bool = False
 
+    def __post_init__(self) -> None:
+        # 在这里归一化，是为了让"语言写错了"在**构造时**就炸掉，
+        # 而不是等到发请求、或者更糟——等到译文写回文件之后。
+        self.target_lang = normalize_target_lang(self.target_lang)
+
 
 def build_system_prompt(opts: TranslateOptions, style_hint: str = "") -> str:
     parts = [
         f"你是专业歌词翻译引擎，把下面的歌词逐行翻译成{opts.target_lang}。",
         "这些译文会被写进音频文件的内嵌歌词字段，在一块只能显示纯文本的小屏上阅读。",
         "",
+    ]
+    # 繁體才加。简体路径的输出因此与加这个功能之前**逐字节相同**，
+    # 既不用提升 PROMPT_VERSION，也不会作废已经翻好的缓存。
+    if opts.target_lang == _TRADITIONAL:
+        parts += [_TRADITIONAL_NOTE, ""]
+    parts += [
         _STRUCTURE,
         "",
         _REGISTER,

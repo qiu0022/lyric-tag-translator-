@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """把渲染后的完整提示词导出成可读文本，便于人工审阅。
 
-用法：python dump_prompt.py [输出路径]
+用法：
+    python dump_prompt.py [输出路径] [--lang 繁體中文]
+
+`--lang` 用来对照两套提示词——繁體会多出「输出字形」那一节，
+简体路径则一字不多，两者只差这一块。
 """
 import _bootstrap  # noqa: F401  （把项目根加进 sys.path，见 _bootstrap.py）
 import sys
@@ -9,6 +13,7 @@ from pathlib import Path
 
 import lyric_i18n.translate as T
 from lyric_i18n.translate import (
+    DEFAULT_TARGET_LANG,
     EXPLICIT_KEEP,
     EXPLICIT_MASK,
     EXPLICIT_SOFTEN,
@@ -24,10 +29,24 @@ from lyric_i18n.translate import (
 HINT = "流派：J-Pop；年份：2024；艺人：DECO*27；专辑：Monitoring - Single"
 SAMPLE_LINES = ["夜の風に揺れて", "君の名前を呼ぶ", "夜の風に揺れて"]
 
-out_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("提示词.txt")
+argv = sys.argv[1:]
+lang = DEFAULT_TARGET_LANG
+if "--lang" in argv:
+    i = argv.index("--lang")
+    if i + 1 >= len(argv):
+        print("--lang 后面要跟语言，例如：--lang 繁體中文 或 --lang zh-tw")
+        raise SystemExit(2)
+    lang = argv[i + 1]
+    del argv[i:i + 2]
+
+out_path = Path(argv[0]) if argv else Path("提示词.txt")
 W = 72
 
-opts = TranslateOptions()
+try:
+    opts = TranslateOptions(target_lang=lang)
+except ValueError as exc:
+    print(exc)
+    raise SystemExit(2) from None
 system = build_system_prompt(opts, HINT)
 user = build_user_prompt(SAMPLE_LINES)
 

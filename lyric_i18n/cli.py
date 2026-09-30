@@ -35,6 +35,7 @@ from .lyrics import (
 )
 from .lyrics import restore as restore_lyrics
 from .translate import (
+    DEFAULT_TARGET_LANG,
     EXPLICIT_KEEP,
     EXPLICIT_MASK,
     EXPLICIT_SOFTEN,
@@ -42,6 +43,7 @@ from .translate import (
     STYLE_EUPHEMISTIC,
     STYLE_LITERAL,
     STYLE_POETIC,
+    TARGET_LANGS,
     TranslateOptions,
     TranslationResult,
     Translator,
@@ -623,7 +625,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--api-key", default="")
     p_run.add_argument("--model", default="deepseek-flash")
     p_run.add_argument("--base-url", default="https://api.deepseek.com")
-    p_run.add_argument("--target-lang", default="简体中文")
+    p_run.add_argument("--target-lang", default=DEFAULT_TARGET_LANG,
+                       help="译文语言，目前只支持 " + "／".join(TARGET_LANGS)
+                            + "（也认 zh-cn / zh-tw 这类写法）")
     p_run.add_argument("--style", choices=list(STYLES), default="poetic")
     p_run.add_argument("--explicit", choices=list(EXPLICITS), default="soften")
     p_run.add_argument("--thinking", action="store_true", help="开启思考模式（更慢更贵）")
